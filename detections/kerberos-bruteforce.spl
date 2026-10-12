@@ -1,0 +1,4 @@
+index=main EventCode=4771 Failure_Code=0x18
+| bucket _time span=2m
+| stats count by _time, Account_Name, Client_Address
+| where count >= 5

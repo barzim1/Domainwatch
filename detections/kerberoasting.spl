@@ -1,0 +1,3 @@
+index=main EventCode=4769 Ticket_Encryption_Type=0x17
+NOT Account_Name="*$"
+| table _time, Account_Name, Service_Name, Ticket_Encryption_Type
