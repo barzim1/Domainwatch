@@ -1,5 +1,4 @@
-index=main (EventCode=4728 OR EventCode=4729 OR EventCode=4732 OR EventCode=4756)
-(Group_Name="Domain Admins" OR Group_Name="Enterprise Admins" OR Group_Name="Schema Admins" OR Group_Name="Administrators")
-| eval action=case(EventCode=4728 OR EventCode=4732 OR EventCode=4756,"DODANO", EventCode=4729,"USUNIĘTO")
+index=main (EventCode=4728 OR EventCode=4729) Account_Name="*sqlservice*"
+| eval action=if(EventCode=4728,"DODANO","USUNIĘTO")
 | table _time, action, Group_Name, Account_Name
 | sort -_time
