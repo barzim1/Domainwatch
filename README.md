@@ -9,7 +9,11 @@ Home-lab środowisko Active Directory + Splunk SIEM, zbudowane do symulacji i wy
 - **Splunk Enterprise** — self-hosted SIEM na dedykowanej maszynie Ubuntu Server
 - **Splunk Universal Forwarder** — przesył logów Security + Sysmon w czasie rzeczywistym (TCP 9997)
 
-![Architektura](architecture/architecture-diagram.png)
+```mermaid
+flowchart LR
+    A["DC01<br/>Windows Server 2022<br/>Security log + Sysmon"] -->|"Universal Forwarder<br/>TCP 9997"| B["Splunk Enterprise<br/>Ubuntu Server<br/>index=main"]
+    B --> C["Dashboard + detekcje SPL"]
+```
 
 ## Zaimplementowane techniki
 
