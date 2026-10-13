@@ -59,5 +59,4 @@ Dashboard w Splunku z trzema detekcjami (brute-force Kerberos, eskalacja uprawni
 detections/     — zapytania SPL dla każdej techniki
 sigma-rules/     — reguły Sigma (vendor-neutral)
 dashboard/       — zrzut ekranu dashboardu Splunk
-architecture/    — diagram architektury
 docs/            — szczegółowy opis symulacji ataków
