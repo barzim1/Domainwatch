@@ -38,7 +38,7 @@ NOT Account_Name="*$"
 
 ## Dashboard
 
-Panel zbiorczy w Splunku, agregujący wszystkie pięć detekcji na jednej osi czasu, plus osobne panele dla brute-force, eskalacji uprawnień i log clearingu.
+Dashboard w Splunku z trzema detekcjami (brute-force Kerberos, eskalacja uprawnień, czyszczenie logów) oraz zbiorczą osią czasu tych zdarzeń.
 
 ![Dashboard](dashboard/dashboard-overview.png)
 
