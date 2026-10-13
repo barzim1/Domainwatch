@@ -1,0 +1,20 @@
+title: PowerShell with hidden window or encoded command
+status: experimental
+description: Detects PowerShell started with a hidden window or a Base64 encoded command
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_img:
+        Image|endswith: '\powershell.exe'
+    selection_flags:
+        CommandLine|contains:
+            - '-WindowStyle Hidden'
+            - '-EncodedCommand'
+    condition: selection_img and selection_flags
+falsepositives:
+    - Administrative scripts and deployment tools that use encoded commands
+level: medium
+tags:
+    - attack.execution
+    - attack.t1059.001
