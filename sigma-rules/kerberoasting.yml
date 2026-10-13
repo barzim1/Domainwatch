@@ -1,0 +1,19 @@
+title: Kerberoasting - TGS request with RC4 encryption
+status: experimental
+description: Detects Kerberos service ticket requests using RC4 (0x17), typical for Kerberoasting
+logsource:
+    product: windows
+    service: security
+detection:
+    selection:
+        EventID: 4769
+        TicketEncryptionType: '0x17'
+    filter_machine:
+        TargetUserName|endswith: '$'
+    condition: selection and not filter_machine
+falsepositives:
+    - Legacy systems that do not support AES
+level: medium
+tags:
+    - attack.credential_access
+    - attack.t1558.003
