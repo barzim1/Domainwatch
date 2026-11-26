@@ -12,6 +12,8 @@ Przy każdej pasującej próbie zapytanie liczy błędy z dwóch minut poprzedza
 
 Test syntetyczny uruchomiony w Splunku zakończył się wynikiem **5/5 PASS**. Seria przebiegająca przez granicę stałych przedziałów zwróciła jeden wiersz z pięcioma błędami. Cztery przypadki kontrolne zwróciły zero dopasowań.
 
+Ręczne uruchomienie pełnej reguły w Splunku na historycznych zdarzeniach potwierdziło odczyt pól oraz wyświetlanie dopasowań w tabeli wyników.
+
 ## Triage
 
 Sprawdź, jakie urządzenie używało adresu źródłowego i czy błędy rozpoczęły się po zmianie hasła. Poszukaj podobnych zdarzeń dla innych kont z tego samego adresu oraz udanych zdarzeń 4768 dla tego konta po serii błędów. `::1` oznacza próbę z samego kontrolera domeny, więc w takim przypadku sprawdź lokalne procesy i usługi. Próg pięciu prób pochodzi z labu i wymaga kalibracji przed wdrożeniem w szerszym środowisku.
