@@ -47,6 +47,8 @@ Weryfikacja z 26 listopada 2026 r. w Splunku zakończyła się wynikiem **5/5 PA
 
 Panel odwołuje się do zapisanego raportu, więc późniejsze poprawki SPL wprowadzasz w raporcie.
 
+Panel zweryfikowano w Splunku. Dla zakresu **All time** tabela pokazała 4 wyniki, zgodnie z ręcznym uruchomieniem reguły.
+
 ## Wynik weryfikacji w Splunku
 
 Zapytanie według samych identyfikatorów zdarzeń zwróciło 22 wyniki. Pełna reguła zwróciła 4 dopasowania.
