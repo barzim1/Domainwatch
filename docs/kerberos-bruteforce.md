@@ -14,6 +14,16 @@ Test syntetyczny uruchomiony w Splunku zakończył się wynikiem **5/5 PASS**. S
 
 Ręczne uruchomienie pełnej reguły w Splunku na historycznych zdarzeniach potwierdziło odczyt pól oraz wyświetlanie dopasowań w tabeli wyników.
 
+## Dashboard serii
+
+[Panel Classic XML](../dashboard/kerberos-series.xml) łączy nakładające się okna detekcji dla tego samego kontrolera, konta i adresu. Jeden wiersz przedstawia początek i koniec serii, najwyższą liczbę błędów w dwuminutowym oknie (`peak_2m`) oraz liczbę okien, które osiągnęły próg (`matching_windows`). Liczba okien i najwyższy licznik nie określają łącznej liczby wszystkich prób w serii. Próby poza oknami trafień pozostają poza podsumowaniem. Szczegółowe wiersze pozostają dostępne w raporcie.
+
+1. W **Search & Reporting** uruchom [regułę Kerberos](../detections/kerberos-bruteforce.spl), a potem zapisz ją przez **Save As → Report** dokładnie jako `DomainWatch - Kerberos Failures` z typem **Statistics Table**.
+2. W tej samej aplikacji utwórz prywatny dashboard typu **Classic Dashboards**. W **Edit → Source** wklej [XML panelu](../dashboard/kerberos-series.xml) i zapisz.
+3. W ustawieniu **Zakres czasu** wybierz okres obejmujący znane trafienia. Porównaj agregację z wynikami raportu w tym samym zakresie.
+
+Test panelu można uruchomić przez `python3 tests/kerberos_series_search.py` i wklejenie wypisanego zapytania do Splunka. Oczekiwane są cztery wiersze `PASS`, które obejmują połączenie nakładających się okien, oddzielenie dwóch serii i grupowanie według kontrolera oraz adresu. Generator używa potoku z reguły i zapytania wprost z XML.
+
 ## Triage
 
 Sprawdź, jakie urządzenie używało adresu źródłowego i czy błędy rozpoczęły się po zmianie hasła. Poszukaj podobnych zdarzeń dla innych kont z tego samego adresu oraz udanych zdarzeń 4768 dla tego konta po serii błędów. `::1` oznacza próbę z samego kontrolera domeny, więc w takim przypadku sprawdź lokalne procesy i usługi. Próg pięciu prób pochodzi z labu i wymaga kalibracji przed wdrożeniem w szerszym środowisku.

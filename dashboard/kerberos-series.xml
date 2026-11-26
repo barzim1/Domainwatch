@@ -1,0 +1,38 @@
+<form version="1.1">
+  <label>DomainWatch – serie błędów Kerberos</label>
+  <search id="kerberos_hits" ref="DomainWatch - Kerberos Failures">
+    <earliest>$kerberos_time.earliest$</earliest>
+    <latest>$kerberos_time.latest$</latest>
+  </search>
+  <fieldset submitButton="false">
+    <input type="time" token="kerberos_time" searchWhenChanged="true">
+      <label>Zakres czasu</label>
+      <default>
+        <earliest>-24h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Serie błędów preautoryzacji Kerberos</title>
+      <table>
+        <search base="kerberos_hits">
+          <query><![CDATA[
+sort 0 +_time
+| streamstats current=f window=1 global=f last(_time) AS previous_window_end by host Account_Name Client_Address
+| eval series_start=if(isnull(previous_window_end) OR first_failure>previous_window_end, 1, 0)
+| streamstats sum(series_start) AS series_id by host Account_Name Client_Address
+| stats min(first_failure) AS first_failure max(_time) AS last_failure max(count) AS peak_2m count AS matching_windows by host Account_Name Client_Address series_id
+| sort 0 -last_failure
+| fieldformat first_failure=strftime(first_failure, "%Y-%m-%d %H:%M:%S")
+| fieldformat last_failure=strftime(last_failure, "%Y-%m-%d %H:%M:%S")
+| table first_failure last_failure host Account_Name Client_Address peak_2m matching_windows
+          ]]></query>
+        </search>
+        <option name="count">20</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</form>
