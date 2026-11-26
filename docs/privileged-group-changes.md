@@ -27,6 +27,18 @@ Reguła identyfikuje wbudowaną grupę Administrators po SID `S-1-5-32-544` oraz
 | 4732 z niestandardowym SID i nazwą Administrators | Brak wyniku |
 | 4728 dotyczący zwykłej grupy | Brak wyniku |
 
+## Wynik weryfikacji w Splunku
+
+Zapytanie według samych identyfikatorów zdarzeń zwróciło 22 wyniki. Pełna reguła zwróciła 4 dopasowania.
+
+| Identyfikator zdarzenia | Typ operacji | Liczba dopasowań |
+|---|---|---:|
+| 4728 | Dodanie do globalnej grupy zabezpieczeń | 2 |
+| 4729 | Usunięcie z globalnej grupy zabezpieczeń | 1 |
+| 4732 | Dodanie do lokalnej grupy zabezpieczeń | 1 |
+
+## Triage
+
 W trakcie triage sprawdź zgłoszenie zmiany, tożsamość wykonawcy i członka oraz czas operacji. Dodanie, po którym szybko nastąpiło usunięcie, nadal wymaga sprawdzenia, czy w międzyczasie użyto przyznanego dostępu. Jeśli masz `SubjectLogonId`, możesz skorelować zmianę z logowaniem 4624 na tym samym hoście.
 
 [Microsoft Learn – Audit Security Group Management](https://learn.microsoft.com/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/audit-security-group-management) · [Microsoft Learn – pola zdarzenia 4732](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4732) · [Microsoft Learn – grupy zabezpieczeń AD](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-groups)
