@@ -10,6 +10,8 @@ Przy każdej pasującej próbie zapytanie liczy błędy z dwóch minut poprzedza
 2. Oczekuj pięciu wierszy `PASS`: seria na granicy dawnych przedziałów, szersze odstępy, inny kod, podział prób pomiędzy kontrolery i podział prób pomiędzy adresy. Pierwszy przypadek sprawdza również mieszany zapis adresu IP, zapis kodu w dziesiętnym formacie i ekstrakcję pól z XML.
 3. Uruchom właściwą regułę na historycznych logach 4771. Jeżeli nie widzisz trafień, sprawdź, czy kontroler wysyła zdarzenia z audytu niepowodzeń **Audit Kerberos Authentication Service** oraz czy Splunk ma pola `Failure_Code`, `Account_Name` i `Client_Address` lub dane XML.
 
+Test syntetyczny uruchomiony w Splunku zakończył się wynikiem **5/5 PASS**. Seria przebiegająca przez granicę stałych przedziałów zwróciła jeden wiersz z pięcioma błędami. Cztery przypadki kontrolne zwróciły zero dopasowań.
+
 ## Triage
 
 Sprawdź, jakie urządzenie używało adresu źródłowego i czy błędy rozpoczęły się po zmianie hasła. Poszukaj podobnych zdarzeń dla innych kont z tego samego adresu oraz udanych zdarzeń 4768 dla tego konta po serii błędów. `::1` oznacza próbę z samego kontrolera domeny, więc w takim przypadku sprawdź lokalne procesy i usługi. Próg pięciu prób pochodzi z labu i wymaga kalibracji przed wdrożeniem w szerszym środowisku.
