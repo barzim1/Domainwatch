@@ -37,6 +37,8 @@ python3 tests/privileged_group_search.py
 
 Wklej całe wypisane zapytanie do **Search & Reporting** i użyj trybu **Verbose Mode**, żeby widzieć pola przy diagnozowaniu błędu. Oczekiwany wynik to pięć wierszy ze statusem `PASS`. Generator używa potoku z pliku detekcji i podstawia do niego syntetyczne zdarzenia w pamięci wyszukiwania. Test nie weryfikuje odczytu z indeksu ani konfiguracji Universal Forwardera.
 
+Weryfikacja z 26 listopada 2026 r. w Splunku zakończyła się wynikiem **5/5 PASS**. Test potwierdził usunięcie z grupy lokalnej (4733), dodanie i usunięcie z grupy uniwersalnej (4756 i 4757), dopasowanie po nazwie przy braku SID oraz odrzucenie grupy z nieobjętym regułą SID pomimo zgodnej nazwy.
+
 ## Dashboard
 
 1. W aplikacji **Search & Reporting** zapisz [zapytanie detekcji](../detections/privilege-escalation.spl) przez **Save As → Report** pod nazwą `DomainWatch - Privileged Group Changes`. Jako typ zawartości wybierz **Statistics Table**.
