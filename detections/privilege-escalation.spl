@@ -1,4 +1,24 @@
-index=main (EventCode=4728 OR EventCode=4729) Account_Name="*sqlservice*"
-| eval action=if(EventCode=4728,"DODANO","USUNIĘTO")
-| table _time, action, Group_Name, Account_Name
+index=main (source="WinEventLog:Security" OR source="XmlWinEventLog:Security" OR sourcetype="WinEventLog:Security" OR sourcetype="XmlWinEventLog:Security" OR Channel="Security")
+    (EventCode IN (4728, 4729, 4732, 4733, 4756, 4757) OR EventID IN (4728, 4729, 4732, 4733, 4756, 4757))
+| rex field=_raw "<Data Name=['\"]TargetSid['\"]>(?<xml_group_sid>S-[0-9-]+)</Data>"
+| rex field=_raw "<Data Name=['\"]TargetUserName['\"]>(?<xml_group_name>[^<]+)</Data>"
+| rex field=_raw "(?m)^[ \t]*Group:[ \t]*\r?\n[ \t]*Security ID:[ \t]*(?<text_group_identity>[^\r\n]+)\r?\n[ \t]*Group Name:[ \t]*(?<text_group_name>[^\r\n]+)"
+| eval event_id=coalesce(EventCode, EventID),
+       group_sid=coalesce(TargetSid, xml_group_sid, if(match(trim(text_group_identity), "^S-[0-9]+(-[0-9]+)+$"), trim(text_group_identity), null())),
+       group_name=trim(coalesce(TargetUserName, xml_group_name, text_group_name, Group_Name))
+| eval group_match=case(
+       group_sid="S-1-5-32-544", "SID",
+       match(group_sid, "^S-1-5-21-[0-9]+-[0-9]+-[0-9]+-(512|518|519)$"), "SID",
+       isnull(group_sid) AND in(lower(group_name), "administrators", "domain admins", "schema admins", "enterprise admins"), "NAME")
+| where isnotnull(group_match)
+| rex field=_raw "<Data Name=['\"]SubjectUserName['\"]>(?<xml_actor>[^<]+)</Data>"
+| rex field=_raw "<Data Name=['\"]MemberSid['\"]>(?<xml_member_sid>[^<]+)</Data>"
+| rex field=_raw "<Data Name=['\"]MemberName['\"]>(?<xml_member_name>[^<]+)</Data>"
+| rex field=_raw "(?m)^[ \t]*Subject:[ \t]*\r?\n[ \t]*Security ID:[^\r\n]*\r?\n[ \t]*Account Name:[ \t]*(?<text_actor>[^\r\n]+)"
+| rex field=_raw "(?m)^[ \t]*Member:[ \t]*\r?\n[ \t]*Security ID:[ \t]*(?<text_member_identity>[^\r\n]+)\r?\n[ \t]*Account Name:[ \t]*(?<text_member_name>[^\r\n]+)"
+| eval action=if(in(tonumber(event_id), 4728, 4732, 4756), "DODANO", "USUNIĘTO"),
+       actor=trim(coalesce(SubjectUserName, xml_actor, text_actor)),
+       member=trim(coalesce(MemberName, xml_member_name, text_member_name)),
+       member_identity=trim(coalesce(MemberSid, xml_member_sid, text_member_identity))
+| table _time host event_id action group_name group_sid group_match actor member member_identity
 | sort -_time
