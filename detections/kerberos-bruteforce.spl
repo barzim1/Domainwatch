@@ -1,4 +1,16 @@
-index=main EventCode=4771 Failure_Code=0x18
-| bucket _time span=2m
-| stats count by _time, Account_Name, Client_Address
-| where count >= 5
+index=main (source="WinEventLog:Security" OR source="XmlWinEventLog:Security" OR sourcetype="WinEventLog:Security" OR sourcetype="XmlWinEventLog:Security" OR Channel="Security")
+    (EventCode=4771 OR EventID=4771)
+| rex field=_raw "<Data Name=['\"]TargetUserName['\"]>(?<xml_account>[^<]+)</Data>"
+| rex field=_raw "<Data Name=['\"]IpAddress['\"]>(?<xml_client>[^<]+)</Data>"
+| rex field=_raw "<Data Name=['\"]Status['\"]>(?<xml_status>[^<]+)</Data>"
+| eval Account_Name=lower(trim(coalesce(TargetUserName, xml_account, Account_Name))),
+       Client_Address=replace(lower(trim(coalesce(IpAddress, xml_client, Client_Address))), "^::ffff:(?=[0-9]+[.])", ""),
+       failure_code=lower(trim(coalesce(Status, xml_status, Failure_Code)))
+| where match(failure_code, "^(0x0*18|24)$") AND len(Account_Name)>0 AND Account_Name!="-" AND len(Client_Address)>0 AND Client_Address!="-"
+| fields _time host Account_Name Client_Address
+| sort 0 +_time
+| streamstats time_window=2m count min(_time) AS first_failure by host Account_Name Client_Address
+| where count>=5
+| table _time Account_Name Client_Address count host first_failure
+| fieldformat first_failure=strftime(first_failure, "%Y-%m-%d %H:%M:%S")
+| sort 0 -_time
