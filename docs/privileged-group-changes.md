@@ -15,7 +15,7 @@ Reguła identyfikuje wbudowaną grupę Administrators po SID `S-1-5-32-544` oraz
 1. Potwierdź, że na monitorowanym hoście audyt udanych operacji **Audit Security Group Management** jest włączony. Sprawdź w Splunku rzeczywisty indeks i źródło dziennika Security. Reguła domyślnie używa `index=main` oraz standardowych oznaczeń źródła lub kanału. W razie różnic dostosuj pierwszy wiersz do konfiguracji labu.
 2. Wybierz przedział z historycznymi zdarzeniami lub zaimportuj syntetyczne próbki do testowego indeksu. Sprawdź wyniki według poniższej tabeli.
 3. Porównaj `actor` z sekcją **Subject**, `member` i `member_identity` z **Member**, a `group_name` i `group_sid` z **Group**. Gdy `member` ma wartość `-`, posłuż się `member_identity`. Przy braku wyników wyszukaj same identyfikatory zdarzeń z tabeli i sprawdź `_raw`, zanim zmienisz filtr grup.
-4. Jeśli używasz istniejącego panelu dashboardu, wklej do niego aktualne zapytanie i sprawdź kolumny po zapisaniu.
+4. Porównaj wyniki z tabelą poniżej. Panel możesz zaimportować według instrukcji w sekcji **Dashboard**.
 
 | Próbka | Oczekiwany wynik |
 |---|---|
@@ -26,6 +26,24 @@ Reguła identyfikuje wbudowaną grupę Administrators po SID `S-1-5-32-544` oraz
 | 4732 w angielskim tekście, nazwa Administrators, brak SID grupy | `DODANO`, `NAME` |
 | 4732 z niestandardowym SID i nazwą Administrators | Brak wyniku |
 | 4728 dotyczący zwykłej grupy | Brak wyniku |
+
+## Test na syntetycznych zdarzeniach
+
+Z katalogu repozytorium uruchom w terminalu:
+
+```bash
+python3 tests/privileged_group_search.py
+```
+
+Wklej całe wypisane zapytanie do **Search & Reporting** i użyj trybu **Verbose Mode**, żeby widzieć pola przy diagnozowaniu błędu. Oczekiwany wynik to pięć wierszy ze statusem `PASS`. Generator używa potoku z pliku detekcji i podstawia do niego syntetyczne zdarzenia w pamięci wyszukiwania. Test nie weryfikuje odczytu z indeksu ani konfiguracji Universal Forwardera.
+
+## Dashboard
+
+1. W aplikacji **Search & Reporting** zapisz [zapytanie detekcji](../detections/privilege-escalation.spl) przez **Save As → Report** pod nazwą `DomainWatch - Privileged Group Changes`. Jako typ zawartości wybierz **Statistics Table**.
+2. W tej samej aplikacji utwórz prywatny dashboard typu **Classic Dashboards**. W jego edytorze **Source** wklej zawartość [pliku XML dashboardu](../dashboard/privileged-group-changes.xml) i zapisz.
+3. Wybierz zakres czasu obejmujący znane zdarzenia. Porównaj tabelę na dashboardzie z ręcznym uruchomieniem raportu dla tego samego zakresu. Przy komunikacie o braku raportu sprawdź jego dokładną nazwę i to, czy zapisano go w tej samej aplikacji.
+
+Panel odwołuje się do zapisanego raportu, więc późniejsze poprawki SPL wprowadzasz w raporcie.
 
 ## Wynik weryfikacji w Splunku
 
