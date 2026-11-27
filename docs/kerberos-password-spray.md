@@ -10,6 +10,8 @@ Próg jest punktem startowym dla labu. Zdarzenie 4771 opisuje niepowodzenie logo
 2. Oczekuj sześciu wierszy `PASS`. Przypadek dodatni zawiera pięć kont i kolejny błąd ponad progiem. Reguła ma zwrócić jeden wiersz w momencie osiągnięcia progu. Przypadki kontrolne weryfikują wielokrotne próby jednego konta, rozdzielenie prób przez adres i kontroler, wyjście poza okno oraz inny kod błędu.
 3. Uruchom właściwą regułę na historycznych logach. Brak trafienia jest oczekiwany, jeśli w logach są wyłącznie serie dotyczące jednego konta.
 
+Test syntetyczny uruchomiony w Splunku zakończył się wynikiem **6/6 PASS**. Przypadek dodatni zwrócił jedno trafienie przy pięciu różnych kontach. Każdy z pięciu przypadków kontrolnych zwrócił zero trafień.
+
 ## Triage
 
 Sprawdź, czy `Client_Address` należy do jednego urządzenia, czy może reprezentować kilka urządzeń. Porównaj listę `accounts` z rolą maszyny i typowym ruchem. Sprawdź udane żądania TGT (4768) dla tych samych kont i adresu po serii błędów. Próg i zakres czasu dostosuj do zachowania konkretnego środowiska.
