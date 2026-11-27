@@ -12,6 +12,8 @@ Próg jest punktem startowym dla labu. Zdarzenie 4771 opisuje niepowodzenie logo
 
 Test syntetyczny uruchomiony w Splunku zakończył się wynikiem **6/6 PASS**. Przypadek dodatni zwrócił jedno trafienie przy pięciu różnych kontach. Każdy z pięciu przypadków kontrolnych zwrócił zero trafień.
 
+Pełne zapytanie uruchomiono w Splunku także na historycznych zdarzeniach. Reguła nie zgłosiła dopasowania do zdefiniowanego progu. Przypadek dodatni potwierdzono na danych syntetycznych.
+
 ## Triage
 
 Sprawdź, czy `Client_Address` należy do jednego urządzenia, czy może reprezentować kilka urządzeń. Porównaj listę `accounts` z rolą maszyny i typowym ruchem. Sprawdź udane żądania TGT (4768) dla tych samych kont i adresu po serii błędów. Próg i zakres czasu dostosuj do zachowania konkretnego środowiska.
