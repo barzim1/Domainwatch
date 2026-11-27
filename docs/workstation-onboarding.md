@@ -6,12 +6,12 @@ Cel tego etapu to potwierdzenie, że zwykłe logowanie konta domenowego można p
 |---|---|
 | DC01 | Kontroler domeny i serwer DNS dla `lab.local` |
 | SOC-Lab-Ubuntu-01 | Splunk Enterprise. Odbiera dane od forwarderów na TCP 9997. |
-| WS01 | Nowa stacja Windows 11 Pro lub Enterprise z Universal Forwarderem |
+| WS01 | Osobna VM z Windows 10 Pro 64-bit i Universal Forwarderem |
 
 ## 1. Utwórz VM
 
-- W VMware sprawdź **DC01 → Settings → Network Adapter**. Zanotuj tryb i numer sieci wirtualnej, jeśli używasz ustawienia **Custom**. Po instalacji WS01 podłącz do tej samej sieci VMware. Ustawienia obu istniejących maszyn pozostaw bez zmian.
-- Użyj posiadanego, licencjonowanego obrazu Windows 11 Pro albo [Windows 11 Enterprise Evaluation](https://www.microsoft.com/en-us/evalcenter/download-windows-11-enterprise). Ustaw co najmniej 2 vCPU, 4 GB RAM i dysk 64 GB. VM powinna korzystać z UEFI, Secure Boot i wirtualnego TPM. Opcje zależą od wersji VMware. [Wymagania Microsoftu](https://learn.microsoft.com/en-us/windows/whats-new/windows-11-requirements) · [Konfiguracja VMware](https://knowledge.broadcom.com/external/article?legacyId=86207)
+- Na hoście uruchom VMware Workstation i utwórz nową VM. W **WS01 → Settings → Network Adapter** wybierz **NAT** oraz **Connect at power on**, zgodnie z ustawieniem DC01 w tym labie. Jeśli w innym labie DC01 używa sieci **Custom**, wybierz na WS01 tę samą sieć VMnet. [Tryby sieci VMware](https://knowledge.broadcom.com/external/article?articleNumber=309842)
+- Użyj obrazu ISO Windows 10 64-bit i w instalatorze wybierz **Windows 10 Pro**, jeśli masz licencję na tę edycję dla VM. System instalujesz na dysku wirtualnym WS01. Jako punkt startowy przydziel VM 2 vCPU, 4 GB RAM i 64 GB dysku. W tym scenariuszu sprawdzamy lokalną domenę AD. [Pobieranie Windows 10](https://www.microsoft.com/pl-pl/software-download/windows10) · [Edycje obsługujące dołączenie do domeny](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/join-computer-to-domain)
 - W ustawieniach nowego Windowsa nazwij komputer **WS01**. Zaloguj się lokalnie z uprawnieniami do zmiany ustawień sieci i dołączenia do domeny.
 
 ## 2. Sprawdź DNS i dołącz do domeny
@@ -31,7 +31,7 @@ Cel tego etapu to potwierdzenie, że zwykłe logowanie konta domenowego można p
 ## 3. Wyślij log Security do Splunka
 
 1. Na Ubuntu odczytaj adres IP interfejsu labu poleceniem `ip -4 addr`. Na WS01 sprawdź `Test-NetConnection <IP_Ubuntu> -Port 9997`, podstawiając ten adres bez nawiasów. Oczekuj `TcpTestSucceeded : True`.
-2. Na WS01 zainstaluj [Splunk Universal Forwarder dla Windows](https://www.splunk.com/en_us/download/universal-forwarder.html). W instalatorze wybierz własny odbiornik, wskaż adres Ubuntu i port **9997** w polu **Receiving Indexer**. Włącz zbieranie **Security Event Log** i użyj konta usługi z prawem odczytu tego kanału. W instalacji samodzielnej pole **Deployment Server** możesz zostawić puste. [Instrukcja instalatora](https://help.splunk.com/en/data-management/forward-data/universal-forwarder-manual/10.6/install-the-universal-forwarder/install-a-windows-universal-forwarder)
+2. Na WS01 zainstaluj [Splunk Universal Forwarder 10.2.x dla Windows x64](https://www.splunk.com/en_us/download/previous-releases/universal-forwarder.html). Seria 10.2 obsługuje Windows 10 x64 i przesyłanie do Splunk Enterprise 10.4.x. W instalatorze wskaż adres Ubuntu i port **9997** w polu **Receiving Indexer**. Włącz **Security Event Log** i użyj konta usługi z prawem odczytu tego kanału. W instalacji samodzielnej **Deployment Server** może zostać pusty. [Zgodność z Windows 10](https://help.splunk.com/en/splunk-enterprise/get-started/install-and-upgrade/10.2/plan-your-splunk-enterprise-installation/system-requirements-for-use-of-splunk-enterprise-on-premises) · [Zgodność forwardera i indeksatora](https://help.splunk.com/en/splunk-enterprise/release-notes-and-updates/compatibility-matrix/splunk-products-version-compatibility/compatibility-between-forwarders-and-splunk-enterprise-indexers)
 3. W Splunku uruchom `index=main (host=WS01 OR host=WS01.lab.local) | stats count by host source sourcetype` na **Last 24 hours**. Jeśli nazwa jest inna, odszukaj host pod nazwą z forwardera i dostosuj [zapytanie](../searches/workstation-logon-evidence.spl). Jeśli dziennik Security lokalnie zawiera zdarzenia, lecz Splunk ich nie zwraca, sprawdź usługę `SplunkForwarder`, odczyt kanału i ustawienia odbiornika.
 
 ## 4. Weryfikacja logowania
