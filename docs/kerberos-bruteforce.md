@@ -24,6 +24,8 @@ Ręczne uruchomienie pełnej reguły w Splunku na historycznych zdarzeniach potw
 
 Test panelu można uruchomić przez `python3 tests/kerberos_series_search.py` i wklejenie wypisanego zapytania do Splunka. Oczekiwane są cztery wiersze `PASS`, które obejmują połączenie nakładających się okien, oddzielenie dwóch serii i grupowanie według kontrolera oraz adresu. Generator używa potoku z reguły i zapytania wprost z XML.
 
+Panel zweryfikowano w Splunku. Podsumowanie połączyło nakładające się okna i rozdzieliło osobne serie, zgodnie z wynikami raportu szczegółowego.
+
 ## Triage
 
 Sprawdź, jakie urządzenie używało adresu źródłowego i czy błędy rozpoczęły się po zmianie hasła. Poszukaj podobnych zdarzeń dla innych kont z tego samego adresu oraz udanych zdarzeń 4768 dla tego konta po serii błędów. `::1` oznacza próbę z samego kontrolera domeny, więc w takim przypadku sprawdź lokalne procesy i usługi. Próg pięciu prób pochodzi z labu i wymaga kalibracji przed wdrożeniem w szerszym środowisku.
