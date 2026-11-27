@@ -24,4 +24,6 @@ Uruchomienie panelu w Splunku potwierdziło wyświetlanie błędów 4771 po nazw
 
 W katalogu repozytorium uruchom `python3 tests/account_triage_search.py`. Wklej wypisane zapytanie do **Search & Reporting**, wybierz **Last 24 hours** i sprawdź dziewięć przypadków. `actual_seconds=-1` oznacza brak powiązania z poprzednim błędem. Przypadek `same-host-ip` ma zwrócić `35` sekund.
 
+Test syntetyczny w Splunku zakończył się wynikiem **9/9 PASS**. W przypadku zgodnego konta, kontrolera i adresu odstęp do poprzedniego błędu wyniósł 35 sekund. Przypadki kontrolne potwierdziły brak powiązania przy innym adresie lub kontrolerze, nieudanym żądaniu oraz po upływie 10 minut.
+
 [Microsoft Learn – zdarzenie 4768](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4768) · [zdarzenie 4771](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4771) · [zdarzenie 4732](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4732)
