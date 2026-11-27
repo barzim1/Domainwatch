@@ -18,4 +18,10 @@ Wpisz nazwę konta w postaci `sAMAccountName`, bez prefiksu domeny. Jeśli anali
 2. W **Edit → Source** wklej cały [XML dashboardu](../dashboard/account-triage.xml) i zapisz.
 3. Wpisz znaną nazwę konta, ustaw zakres obejmujący historyczne zdarzenia i kliknij **Submit**. Porównaj kilka wierszy z logami Security w **Search & Reporting**. Gdy chcesz zobaczyć zmiany grup dotyczące członka, podaj SID z pola `member_identity` w dashboardzie zmian grup i ponownie użyj **Submit**.
 
+Uruchomienie panelu w Splunku potwierdziło wyświetlanie błędów 4771 po nazwie konta oraz zmian 4728 i 4729 po SID członka.
+
+### Test powiązań TGT
+
+W katalogu repozytorium uruchom `python3 tests/account_triage_search.py`. Wklej wypisane zapytanie do **Search & Reporting**, wybierz **Last 24 hours** i sprawdź dziewięć przypadków. `actual_seconds=-1` oznacza brak powiązania z poprzednim błędem. Przypadek `same-host-ip` ma zwrócić `35` sekund.
+
 [Microsoft Learn – zdarzenie 4768](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4768) · [zdarzenie 4771](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4771) · [zdarzenie 4732](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4732)
