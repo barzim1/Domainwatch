@@ -1,0 +1,47 @@
+<form version="1.1">
+  <label>DomainWatch – stan telemetrii</label>
+  <fieldset submitButton="false">
+    <input type="text" token="lab_host" searchWhenChanged="true">
+      <label>Host w Splunku</label>
+      <default>DC01</default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Windows Security i Sysmon – ostatnie 24 godziny według czasu indeksowania</title>
+      <table>
+        <search>
+          <query><![CDATA[
+index=main host=$lab_host|s$ _index_earliest=-24h _index_latest=now
+| eval source_name=lower(source), source_type=lower(sourcetype)
+| eval channel=case(
+    in(source_name, "wineventlog:security", "xmlwineventlog:security") OR in(source_type, "wineventlog:security", "xmlwineventlog:security"), "Windows Security",
+    in(source_name, "wineventlog:microsoft-windows-sysmon/operational", "xmlwineventlog:microsoft-windows-sysmon/operational") OR in(source_type, "wineventlog:microsoft-windows-sysmon/operational", "xmlwineventlog:microsoft-windows-sysmon/operational"), "Sysmon")
+| where isnotnull(channel)
+| stats count AS events max(_indextime) AS last_ingested max(_time) AS last_event by channel
+| append [
+    | makeresults count=2
+    | streamstats count AS row
+    | eval channel=if(row=1, "Windows Security", "Sysmon"), events=0
+    | fields channel events
+  ]
+| stats sum(events) AS events_24h max(last_ingested) AS last_ingested max(last_event) AS last_event by channel
+| eval ingest_age_min=round((now()-last_ingested)/60, 1)
+| eval status=case(
+    events_24h=0, "BRAK DANYCH",
+    now()-last_ingested>=1800, "CISZA",
+    now()-last_event>=1800, "STARE ZDARZENIA",
+    true(), "AKTYWNE")
+| fieldformat last_ingested=strftime(last_ingested, "%Y-%m-%d %H:%M:%S")
+| fieldformat last_event=strftime(last_event, "%Y-%m-%d %H:%M:%S")
+| table channel status events_24h last_ingested last_event ingest_age_min
+| sort channel
+          ]]></query>
+          <earliest>0</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</form>
