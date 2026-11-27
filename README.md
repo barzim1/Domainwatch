@@ -1,67 +1,50 @@
-# Domainwatch
+# DomainWatch
 
-Home-lab środowisko Active Directory + Splunk SIEM, zbudowane do symulacji i wykrywania technik ataku zmapowanych na MITRE ATT&CK. Projekt portfolio pod rekrutację na stanowisko SOC L1.
+Lab SOC do analizy zdarzeń Active Directory w Splunk Enterprise. Zbieram logi Windows Security i Sysmon, piszę detekcje w SPL i sprawdzam, jak ich wyniki pomagają w triage’u. Reguły Kerberos i zmian grup zweryfikowałem na historycznych logach labu oraz syntetycznych przypadkach w Splunku.
+
+**Zacznij od [studium przypadku Kerberos](docs/case-kerberos-triage.md)**. Szczegółowa reguła zwróciła 15 pasujących okien. Dashboard połączył je w dwie serie do sprawdzenia, zachowując dostęp do wyników szczegółowych.
 
 ## Architektura
 
-- **DC01** — Windows Server 2022, kontroler domeny (`lab.local`)
-- **Sysmon** — telemetria procesów na DC01, konfiguracja modularna (redukcja szumu)
-- **Splunk Enterprise** — self-hosted SIEM na dedykowanej maszynie Ubuntu Server
-- **Splunk Universal Forwarder** — przesył logów Security + Sysmon w czasie rzeczywistym (TCP 9997)
-
 ```mermaid
 flowchart LR
-    A["DC01<br/>Windows Server 2022<br/>Security log + Sysmon"] -->|"Universal Forwarder<br/>TCP 9997"| B["Splunk Enterprise<br/>Ubuntu Server<br/>index=main"]
-    B --> C["Dashboard + detekcje SPL"]
+    DC["Windows Server 2022 · AD DS"]
+    SEC["Windows Security"]
+    SYS["Sysmon"]
+    FWD["Splunk Universal Forwarder"]
+    SIEM["Splunk Enterprise · Ubuntu"]
+    DC --> SEC
+    DC --> SYS
+    SEC --> FWD
+    SYS --> FWD
+    FWD -->|TCP 9997| SIEM
 ```
 
-## Zaimplementowane techniki
+## Od detekcji do triage’u
 
-| Technika | MITRE ATT&CK | Event ID | Plik |
-|---|---|---|---|
-| Kerberoasting | T1558.003 | 4769 | `detections/kerberoasting.spl` |
-| Obfuscated PowerShell | T1059.001 | Sysmon EID 1 | `detections/obfuscated-powershell.spl` |
-| Kerberos Brute-force | T1110 | 4771 | `detections/kerberos-bruteforce.spl` |
-| Zmiana członkostwa w grupie administracyjnej | T1098 | 4728/4729/4732/4733/4756/4757 | [`detections/privilege-escalation.spl`](detections/privilege-escalation.spl) |
-| Log Clearing | T1070.001 | 1102 | `detections/log-clearing.spl` |
+**Triage konta** pokazuje błędy Kerberos i zmiany grup na wspólnej osi czasu. Zmiany grup można filtrować po wykonawcy lub po SID członka. Powiązanie wydania TGT z wcześniejszym błędem zweryfikowałem osobno na danych syntetycznych. [Instrukcja triage](docs/account-triage.md)
 
-Zakres grup, weryfikację w Splunku i wskazówki do triage opisuje [instrukcja detekcji zmian członkostwa](docs/privileged-group-changes.md).
+![Podgląd triage z pominiętymi danymi identyfikującymi. Widoczne są błąd preautoryzacji, dodanie do grupy i usunięcie z grupy.](docs/images/account-triage-preview.svg)
 
-Dla Kerberoastingu i Obfuscated PowerShell dodatkowo reguły w formacie Sigma (`sigma-rules/`) — detekcja niezależna od konkretnego SIEM.
+**Stan telemetrii** pomaga sprawdzić, czy brak trafień może wynikać z przerwy w dostawie logów. Panel pokazuje czas ostatniego zdarzenia osobno od czasu indeksowania. [Instrukcja panelu](docs/telemetry-health.md)
 
-## Przykład: Kerberoasting (T1558.003)
+![Podgląd stanu telemetrii. Oba kanały są aktywne dla monitorowanego hosta. Dla nieistniejącego hosta panel pokazuje brak danych.](docs/images/telemetry-health-preview.svg)
 
-**Symulacja ataku:** konto serwisowe `sqlservice` ze skonfigurowanym SPN, wymuszone żądanie biletu TGS z szyfrowaniem RC4 (słabym względem AES).
+Podglądy odtwarzają zweryfikowane wyniki. Pomijają nazwy kont i hostów, SID-y oraz dokładne znaczniki czasu.
 
-**Detekcja (SPL):**
-```spl
-index=main EventCode=4769 Ticket_Encryption_Type=0x17
-NOT Account_Name="*$"
-| table _time, Account_Name, Service_Name, Ticket_Encryption_Type
-```
+## Detekcje
 
-**Dlaczego to działa:** żądanie TGS z `Ticket_Encryption_Type=0x17` (RC4) dla konta z ustawionym SPN jest nietypowe w środowisku preferującym AES — atakujący zazwyczaj wymusza słabsze szyfrowanie, żeby ułatwić sobie offline cracking bileta.
+| Sygnał | Zdarzenia | Reguła |
+|---|---|---|
+| Seria błędów Kerberos dla jednego konta | Security 4771 | [SPL](detections/kerberos-bruteforce.spl) · [weryfikacja i triage](docs/kerberos-bruteforce.md) |
+| Podejrzenie password sprayingu | Security 4771 | [SPL](detections/kerberos-password-spray.spl) · [weryfikacja i triage](docs/kerberos-password-spray.md) |
+| Zmiany członkostwa w grupach administracyjnych | Security 4728, 4729, 4732, 4733, 4756, 4757 | [SPL](detections/privilege-escalation.spl) · [weryfikacja i triage](docs/privileged-group-changes.md) |
+| Bilety usługowe Kerberos z RC4 | Security 4769 | [SPL](detections/kerberoasting.spl) · [Sigma](sigma-rules/kerberoasting.yml) |
+| PowerShell z zakodowanym poleceniem lub ukrytym oknem | Sysmon 1 | [SPL](detections/obfuscated-powershell.spl) · [Sigma](sigma-rules/obfuscated-powershell.yml) |
+| Wyczyszczenie dziennika Security | Security 1102 | [SPL](detections/log-clearing.spl) |
 
-## Dashboard
+Pliki [Classic XML](dashboard/) można zaimportować do Splunk Web. Katalog [tests](tests/) zawiera generatory zapytań, które tworzą zdarzenia syntetyczne na czas wyszukiwania.
 
-Dashboard w Splunku z trzema detekcjami (brute-force Kerberos, eskalacja uprawnień, czyszczenie logów) oraz zbiorczą osią czasu tych zdarzeń.
+## Zakres labu
 
-![Dashboard](dashboard/dashboard-overview.png)
-
-Dodatkowe panele Classic XML i instrukcje wdrożenia są dostępne dla [zmian grup administracyjnych](docs/privileged-group-changes.md), [serii błędów Kerberos](docs/kerberos-bruteforce.md), [stanu telemetrii](docs/telemetry-health.md) i [triage konta](docs/account-triage.md).
-
-## Czego się nauczyłem / ograniczenia projektu
-
-- **Kerberos vs NTLM przy failed logon:** próba logowania po nazwie hosta wymusza Kerberos; błędne hasło generuje Event ID 4771 (nie 4625, który dotyczy NTLM/logowania interaktywnego).
-- **Próg detekcji nieskalibrowany:** próg agregacji (≥5 prób / 2 min) dobrany konserwatywnie, bez baseline'u realnego ruchu — w produkcyjnym środowisku wymagałby kalibracji na danych historycznych.
-- **Ograniczenie testowe:** atak symulowany z poziomu samego kontrolera domeny (`Client_Address: ::1`), nie z osobnej maszyny klienckiej — brak pełnej telemetrii sieciowej, docelowo do powtórzenia z oddzielnego hosta.
-- **Pola multivalue w Windows Event Log:** np. `Account_Name` w evencie 4728 zawiera zarówno wykonawcę akcji, jak i obiekt zmiany — wymaga świadomego filtrowania, inaczej detekcja łapie fałszywe dopasowania.
-
-## Struktura repozytorium
-
-```
-detections/     — zapytania SPL dla każdej techniki
-sigma-rules/     — reguły Sigma (vendor-neutral)
-dashboard/       — zrzut ekranu dashboardu Splunk
-docs/            — szczegółowy opis symulacji ataków
-```
+Lab obejmuje jeden kontroler domeny. Analizowane serie Kerberos pochodziły z jego interfejsu lokalnego (`::1`). Progi detekcji są ustawieniami labowymi i wymagają kalibracji na ruchu właściwym dla wdrożenia. Panele służą do ręcznego triage’u w Splunk Web.

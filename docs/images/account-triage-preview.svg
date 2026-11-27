@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 192" width="720" height="192" role="img" aria-labelledby="triage-title triage-desc">
+  <title id="triage-title">Triage konta</title>
+  <desc id="triage-desc">Wybrane potwierdzone zdarzenia w kolejności od najnowszego.</desc>
+  <style>
+    text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; fill: #e8edf4; }
+    .title { font-size: 22px; font-weight: 700; }
+    .caption, .heading { font-size: 13px; fill: #b9c6d7; }
+    .heading { font-weight: 700; }
+    .text, .positive, .context { font-size: 15px; }
+    .positive { fill: #9be7c3; font-weight: 700; }
+    .context { fill: #f4d09b; font-weight: 700; }
+  </style>
+  <rect x="0.5" y="0.5" width="719" height="191" rx="10" fill="#151e2b" stroke="#344457"/>
+  <text x="28" y="32" class="title">Triage konta</text>
+  <text x="28" y="54" class="caption">Podgląd zweryfikowanych wyników</text>
+  <text x="28" y="84" class="heading">Event ID</text>
+  <text x="120" y="84" class="heading">Zdarzenie</text>
+  <text x="455" y="84" class="heading">Rola konta</text>
+  <line x1="28" x2="692" y1="94" y2="94" stroke="#344457"/>
+  <text x="28" y="115" class="text">4729</text>
+  <text x="120" y="115" class="context">Usunięto z grupy administracyjnej</text>
+  <text x="455" y="115" class="text">Członek grupy</text>
+  <line x1="28" x2="692" y1="124" y2="124" stroke="#344457"/>
+  <text x="28" y="145" class="text">4728</text>
+  <text x="120" y="145" class="context">Dodano do grupy administracyjnej</text>
+  <text x="455" y="145" class="text">Członek grupy</text>
+  <line x1="28" x2="692" y1="154" y2="154" stroke="#344457"/>
+  <text x="28" y="175" class="text">4771</text>
+  <text x="120" y="175" class="context">Błąd preautoryzacji Kerberos</text>
+  <text x="455" y="175" class="text">Konto Kerberos</text>
+</svg>
