@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 162" width="720" height="162" role="img" aria-labelledby="telemetry-title telemetry-desc">
+  <title id="telemetry-title">Stan telemetrii</title>
+  <desc id="telemetry-desc">Dwa kanały są aktywne dla monitorowanego hosta. Dla nieistniejącego hosta oba zwracają brak danych.</desc>
+  <style>
+    text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; fill: #e8edf4; }
+    .title { font-size: 22px; font-weight: 700; }
+    .caption, .heading { font-size: 13px; fill: #b9c6d7; }
+    .heading { font-weight: 700; }
+    .text, .positive, .context { font-size: 15px; }
+    .positive { fill: #9be7c3; font-weight: 700; }
+    .context { fill: #f4d09b; font-weight: 700; }
+  </style>
+  <rect x="0.5" y="0.5" width="719" height="161" rx="10" fill="#151e2b" stroke="#344457"/>
+  <text x="28" y="32" class="title">Stan telemetrii</text>
+  <text x="28" y="54" class="caption">Podgląd zweryfikowanych wyników</text>
+  <text x="28" y="84" class="heading">Kanał</text>
+  <text x="245" y="84" class="heading">Monitorowany host</text>
+  <text x="455" y="84" class="heading">Nieistniejący host</text>
+  <line x1="28" x2="692" y1="94" y2="94" stroke="#344457"/>
+  <text x="28" y="115" class="text">Windows Security</text>
+  <text x="245" y="115" class="positive">Aktywne</text>
+  <text x="455" y="115" class="text">Brak danych</text>
+  <line x1="28" x2="692" y1="124" y2="124" stroke="#344457"/>
+  <text x="28" y="145" class="text">Sysmon</text>
+  <text x="245" y="145" class="positive">Aktywne</text>
+  <text x="455" y="145" class="text">Brak danych</text>
+</svg>
