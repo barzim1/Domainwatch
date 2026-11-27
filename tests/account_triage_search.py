@@ -73,7 +73,8 @@ def main():
 | {pipeline.rstrip()}
 | eval offset=_time-{anchor}, actual_seconds=coalesce(seconds_since_failure, -1)
 | append [ {make_results(expected)} ]
-| stats values(scenario) AS scenario count(event_id) AS results max(event_id) AS actual_event_id max(actual_seconds) AS actual_seconds max(expected_event_id) AS expected_event_id max(expected_seconds) AS expected_seconds by offset
+| eval fixture_key=printf("fixture:%d", round(tonumber(offset), 0))
+| stats values(scenario) AS scenario count(event_id) AS results max(event_id) AS actual_event_id max(actual_seconds) AS actual_seconds max(expected_event_id) AS expected_event_id max(expected_seconds) AS expected_seconds by fixture_key
 | eval actual_event_id=coalesce(actual_event_id, 0), actual_seconds=coalesce(actual_seconds, -1)
 | eval status=if(isnotnull(expected_event_id) AND results=if(expected_event_id=0, 0, 1) AND actual_event_id=expected_event_id AND actual_seconds=expected_seconds, "PASS", "FAIL")
 | fillnull value="unexpected" scenario
