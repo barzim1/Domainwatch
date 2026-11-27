@@ -18,4 +18,6 @@ Okno indeksowania obejmuje 24 h. Zakres czasu zdarzeń sięga od najstarszych lo
 3. Wpisz nazwę nieistniejącego hosta i sprawdź, czy oba kanały mają `BRAK DANYCH`. Następnie przywróć właściwy host.
 4. Jeżeli na działającym hoście jeden kanał raportuje `BRAK DANYCH`, sprawdź dane powiązane z tym hostem w `index=main` oraz wartości `source` i `sourcetype`. Zmień dopasowanie w XML, jeśli konfiguracja forwardera stosuje inne nazwy.
 
+Panel zweryfikowano w Splunku. Oba kanały wyświetliły status `AKTYWNE` dla monitorowanego hosta i `BRAK DANYCH` po wybraniu nieistniejącego hosta.
+
 [Splunk – wyszukiwanie po czasie indeksowania z pola `_indextime`](https://help.splunk.com/en/splunk-enterprise/search/spl-search-reference/10.6/time-format-variables-and-modifiers/time-modifiers)
