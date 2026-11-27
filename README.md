@@ -48,6 +48,8 @@ Dashboard w Splunku z trzema detekcjami (brute-force Kerberos, eskalacja uprawni
 
 ![Dashboard](dashboard/dashboard-overview.png)
 
+Dodatkowe panele Classic XML i instrukcje wdrożenia są dostępne dla [zmian grup administracyjnych](docs/privileged-group-changes.md), [serii błędów Kerberos](docs/kerberos-bruteforce.md), [stanu telemetrii](docs/telemetry-health.md) i [triage konta](docs/account-triage.md).
+
 ## Czego się nauczyłem / ograniczenia projektu
 
 - **Kerberos vs NTLM przy failed logon:** próba logowania po nazwie hosta wymusza Kerberos; błędne hasło generuje Event ID 4771 (nie 4625, który dotyczy NTLM/logowania interaktywnego).
