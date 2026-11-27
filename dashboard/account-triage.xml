@@ -1,0 +1,78 @@
+<form version="1.1">
+  <label>DomainWatch – triage konta</label>
+  <fieldset submitButton="true">
+    <input type="text" token="triage_account">
+      <label>Nazwa konta (np. sqlservice)</label>
+    </input>
+    <input type="text" token="triage_sid">
+      <label>SID członka grupy (opcjonalny)</label>
+      <default>-</default>
+    </input>
+    <input type="time" token="triage_time">
+      <label>Zakres czasu</label>
+      <default>
+        <earliest>-24h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Kerberos i zmiany członkostwa</title>
+      <table>
+        <search>
+          <query><![CDATA[
+index=main (source="WinEventLog:Security" OR source="XmlWinEventLog:Security" OR sourcetype="WinEventLog:Security" OR sourcetype="XmlWinEventLog:Security" OR Channel="Security")
+    (EventCode IN (4768, 4771, 4728, 4729, 4732, 4733, 4756, 4757) OR EventID IN (4768, 4771, 4728, 4729, 4732, 4733, 4756, 4757))
+| rex field=_raw "<Data Name=['\"]TargetUserName['\"]>(?<xml_target_name>[^<]+)</Data>"
+| rex field=_raw "<Data Name=['\"]IpAddress['\"]>(?<xml_client_ip>[^<]+)</Data>"
+| rex field=_raw "<Data Name=['\"]Status['\"]>(?<xml_status>[^<]+)</Data>"
+| rex field=_raw "<Data Name=['\"]SubjectUserName['\"]>(?<xml_actor>[^<]+)</Data>"
+| rex field=_raw "<Data Name=['\"]MemberSid['\"]>(?<xml_member_sid>[^<]+)</Data>"
+| rex field=_raw "(?m)^[ \t]*Subject:[ \t]*\r?\n[ \t]*Security ID:[^\r\n]*\r?\n[ \t]*Account Name:[ \t]*(?<text_actor>[^\r\n]+)"
+| rex field=_raw "(?m)^[ \t]*Member:[ \t]*\r?\n[ \t]*Security ID:[ \t]*(?<text_member_identity>[^\r\n]+)"
+| eval event_id=tonumber(coalesce(EventCode, EventID)),
+       selected_account=lower(trim($triage_account|s$)),
+       selected_sid=lower(trim($triage_sid|s$))
+| eval is_group=if(in(event_id, 4728, 4729, 4732, 4733, 4756, 4757), 1, 0)
+| eval kerberos_account=if(is_group=0, lower(trim(coalesce(TargetUserName, xml_target_name, Account_Name))), null()),
+       client_ip=if(is_group=0, replace(lower(trim(coalesce(IpAddress, xml_client_ip, Client_Address))), "^::ffff:(?=[0-9]+[.])", ""), null()),
+       result_code=if(is_group=0, lower(trim(coalesce(Status, xml_status, Result_Code, Failure_Code))), null()),
+       actor=if(is_group=1, trim(coalesce(SubjectUserName, xml_actor, text_actor, Subject_User_Name)), null()),
+       member_identity=if(is_group=1, trim(coalesce(MemberSid, xml_member_sid, text_member_identity)), null()),
+       group_name=if(is_group=1, trim(coalesce(TargetUserName, xml_target_name, Group_Name)), null())
+| eval actor_match=if(is_group=1 AND lower(actor)=selected_account, 1, 0),
+       member_match=if(is_group=1 AND match(selected_sid, "^s-[0-9]+(-[0-9]+)+$") AND lower(member_identity)=selected_sid, 1, 0)
+| eval role=case(
+       is_group=0 AND kerberos_account=selected_account, "KONTO KERBEROS",
+       actor_match=1 AND member_match=1, "WYKONAWCA I CZŁONEK",
+       actor_match=1, "WYKONAWCA",
+       member_match=1, "CZŁONEK")
+| where len(selected_account)>0 AND selected_account!="-" AND isnotnull(role)
+| eval event_label=case(
+       event_id=4771, "BŁĄD PREAUTORYZACJI",
+       event_id=4768 AND match(result_code, "^(0x0+|0)$"), "WYDANO TGT",
+       event_id=4768 AND match(result_code, "^(0x[0-9a-f]+|[0-9]+)$"), "ODMOWA TGT",
+       event_id=4768, "ŻĄDANIE TGT – STATUS NIEZNANY",
+       in(event_id, 4728, 4732, 4756), "DODANO DO GRUPY",
+       is_group=1, "USUNIĘTO Z GRUPY")
+| eval has_client=if(isnotnull(client_ip) AND client_ip!="" AND client_ip!="-" AND client_ip!="::" AND client_ip!="0.0.0.0", 1, 0)
+| eval correlation_ip=if(has_client=1, client_ip, "unavailable"),
+       failure_time=if(event_id=4771 AND has_client=1 AND match(result_code, "^(0x0*18|24)$"), _time, null())
+| sort 0 +_time
+| streamstats current=f max(failure_time) AS previous_failure by host correlation_ip
+| eval related_failure=if(event_id=4768 AND event_label="WYDANO TGT" AND has_client=1 AND _time>previous_failure AND _time-previous_failure<=600, previous_failure, null())
+| eval seconds_since_failure=_time-related_failure
+| fieldformat related_failure=strftime(related_failure, "%Y-%m-%d %H:%M:%S")
+| table _time event_label event_id role host client_ip result_code related_failure seconds_since_failure group_name actor member_identity
+| sort 0 -_time
+          ]]></query>
+          <earliest>$triage_time.earliest$</earliest>
+          <latest>$triage_time.latest$</latest>
+        </search>
+        <option name="count">20</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</form>
