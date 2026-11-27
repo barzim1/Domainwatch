@@ -22,8 +22,10 @@ flowchart LR
 | Kerberoasting | T1558.003 | 4769 | `detections/kerberoasting.spl` |
 | Obfuscated PowerShell | T1059.001 | Sysmon EID 1 | `detections/obfuscated-powershell.spl` |
 | Kerberos Brute-force | T1110 | 4771 | `detections/kerberos-bruteforce.spl` |
-| Privilege Escalation | T1098 | 4728/4729/4732/4756 | `detections/privilege-escalation.spl` |
+| Zmiana członkostwa w grupie administracyjnej | T1098 | 4728/4729/4732/4733/4756/4757 | [`detections/privilege-escalation.spl`](detections/privilege-escalation.spl) |
 | Log Clearing | T1070.001 | 1102 | `detections/log-clearing.spl` |
+
+Zakres grup, weryfikację w Splunku i wskazówki do triage opisuje [instrukcja detekcji zmian członkostwa](docs/privileged-group-changes.md).
 
 Dla Kerberoastingu i Obfuscated PowerShell dodatkowo reguły w formacie Sigma (`sigma-rules/`) — detekcja niezależna od konkretnego SIEM.
 
@@ -60,3 +62,4 @@ detections/     — zapytania SPL dla każdej techniki
 sigma-rules/     — reguły Sigma (vendor-neutral)
 dashboard/       — zrzut ekranu dashboardu Splunk
 docs/            — szczegółowy opis symulacji ataków
+```

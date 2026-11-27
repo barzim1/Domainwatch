@@ -1,0 +1,25 @@
+<form version="1.1">
+  <label>DomainWatch – grupy administracyjne</label>
+  <fieldset submitButton="false">
+    <input type="time" token="membership_time" searchWhenChanged="true">
+      <label>Zakres czasu</label>
+      <default>
+        <earliest>-24h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Zmiany członkostwa</title>
+      <table>
+        <search ref="DomainWatch - Privileged Group Changes">
+          <earliest>$membership_time.earliest$</earliest>
+          <latest>$membership_time.latest$</latest>
+        </search>
+        <option name="count">20</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</form>

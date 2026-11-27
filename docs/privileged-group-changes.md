@@ -1,0 +1,66 @@
+# Zmiany członkostwa w grupach administracyjnych
+
+[Reguła SPL](../detections/privilege-escalation.spl) pokazuje, kto zmienił członkostwo, jakiej grupy dotyczyła zmiana i którego członka dodano lub usunięto. Zdarzenie może wynikać z zatwierdzonej pracy administratora. Potwierdź kontekst przed eskalacją.
+
+| Zakres grupy | Dodanie | Usunięcie |
+|---|---:|---:|
+| Globalna | 4728 | 4729 |
+| Lokalna | 4732 | 4733 |
+| Uniwersalna | 4756 | 4757 |
+
+Reguła identyfikuje wbudowaną grupę Administrators po SID `S-1-5-32-544` oraz Domain Admins, Schema Admins i Enterprise Admins po końcówkach domenowych SID `512`, `518` i `519`. Jeśli SID jest niedostępny, sprawdza standardową angielską nazwę grupy i oznacza wynik jako `NAME`. Potwierdź wtedy SID w AD lub w źródłowym zdarzeniu. Do monitorowania grup delegowanych potrzebna jest osobna lista SID. Reguła analizuje bezpośrednie zmiany członkostwa.
+
+## Weryfikacja w Splunku
+
+1. Potwierdź, że na monitorowanym hoście audyt udanych operacji **Audit Security Group Management** jest włączony. Sprawdź w Splunku rzeczywisty indeks i źródło dziennika Security. Reguła domyślnie używa `index=main` oraz standardowych oznaczeń źródła lub kanału. W razie różnic dostosuj pierwszy wiersz do konfiguracji labu.
+2. Wybierz przedział z historycznymi zdarzeniami lub zaimportuj syntetyczne próbki do testowego indeksu. Sprawdź wyniki według poniższej tabeli.
+3. Porównaj `actor` z sekcją **Subject**, `member` i `member_identity` z **Member**, a `group_name` i `group_sid` z **Group**. Gdy `member` ma wartość `-`, posłuż się `member_identity`. Przy braku wyników wyszukaj same identyfikatory zdarzeń z tabeli i sprawdź `_raw`, zanim zmienisz filtr grup.
+4. Porównaj wyniki z tabelą poniżej. Panel możesz zaimportować według instrukcji w sekcji **Dashboard**.
+
+| Próbka | Oczekiwany wynik |
+|---|---|
+| 4728 z SID Domain Admins, inny wykonawca niż dodawany członek | `DODANO`, `SID`, osobne wartości wykonawcy i członka |
+| 4729 z SID Domain Admins | `USUNIĘTO`, `SID` |
+| 4732 i 4733 z SID wbudowanych Administrators | Odpowiednio `DODANO` i `USUNIĘTO`, oba `SID` |
+| 4756 i 4757 z SID Enterprise Admins | Odpowiednio `DODANO` i `USUNIĘTO`, oba `SID` |
+| 4732 w angielskim tekście, nazwa Administrators, brak SID grupy | `DODANO`, `NAME` |
+| 4732 z niestandardowym SID i nazwą Administrators | Brak wyniku |
+| 4728 dotyczący zwykłej grupy | Brak wyniku |
+
+## Test na syntetycznych zdarzeniach
+
+Z katalogu repozytorium uruchom w terminalu:
+
+```bash
+python3 tests/privileged_group_search.py
+```
+
+Wklej całe wypisane zapytanie do **Search & Reporting** i użyj trybu **Verbose Mode**, żeby widzieć pola przy diagnozowaniu błędu. Oczekiwany wynik to pięć wierszy ze statusem `PASS`. Generator używa potoku z pliku detekcji i podstawia do niego syntetyczne zdarzenia w pamięci wyszukiwania. Test nie weryfikuje odczytu z indeksu ani konfiguracji Universal Forwardera.
+
+Weryfikacja z 26 listopada 2026 r. w Splunku zakończyła się wynikiem **5/5 PASS**. Test potwierdził usunięcie z grupy lokalnej (4733), dodanie i usunięcie z grupy uniwersalnej (4756 i 4757), dopasowanie po nazwie przy braku SID oraz odrzucenie grupy z nieobjętym regułą SID pomimo zgodnej nazwy.
+
+## Dashboard
+
+1. W aplikacji **Search & Reporting** zapisz [zapytanie detekcji](../detections/privilege-escalation.spl) przez **Save As → Report** pod nazwą `DomainWatch - Privileged Group Changes`. Jako typ zawartości wybierz **Statistics Table**.
+2. W tej samej aplikacji utwórz prywatny dashboard typu **Classic Dashboards**. W jego edytorze **Source** wklej zawartość [pliku XML dashboardu](../dashboard/privileged-group-changes.xml) i zapisz.
+3. Wybierz zakres czasu obejmujący znane zdarzenia. Porównaj tabelę na dashboardzie z ręcznym uruchomieniem raportu dla tego samego zakresu. Przy komunikacie o braku raportu sprawdź jego dokładną nazwę i to, czy zapisano go w tej samej aplikacji.
+
+Panel odwołuje się do zapisanego raportu, więc późniejsze poprawki SPL wprowadzasz w raporcie.
+
+Panel zweryfikowano w Splunku. Dla zakresu **All time** tabela pokazała 4 wyniki, zgodnie z ręcznym uruchomieniem reguły.
+
+## Wynik weryfikacji w Splunku
+
+Zapytanie według samych identyfikatorów zdarzeń zwróciło 22 wyniki. Pełna reguła zwróciła 4 dopasowania.
+
+| Identyfikator zdarzenia | Typ operacji | Liczba dopasowań |
+|---|---|---:|
+| 4728 | Dodanie do globalnej grupy zabezpieczeń | 2 |
+| 4729 | Usunięcie z globalnej grupy zabezpieczeń | 1 |
+| 4732 | Dodanie do lokalnej grupy zabezpieczeń | 1 |
+
+## Triage
+
+W trakcie triage sprawdź zgłoszenie zmiany, tożsamość wykonawcy i członka oraz czas operacji. Dodanie, po którym szybko nastąpiło usunięcie, nadal wymaga sprawdzenia, czy w międzyczasie użyto przyznanego dostępu. Jeśli masz `SubjectLogonId`, możesz skorelować zmianę z logowaniem 4624 na tym samym hoście.
+
+[Microsoft Learn – Audit Security Group Management](https://learn.microsoft.com/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/audit-security-group-management) · [Microsoft Learn – pola zdarzenia 4732](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4732) · [Microsoft Learn – grupy zabezpieczeń AD](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-groups)
