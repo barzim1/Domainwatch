@@ -1,0 +1,20 @@
+index=main host IN ("DC01", "DC01.lab.local", "WS01", "WS01.lab.local")
+    (source="WinEventLog:Security" OR source="XmlWinEventLog:Security" OR sourcetype="WinEventLog:Security" OR sourcetype="XmlWinEventLog:Security" OR Channel="Security")
+    (EventCode IN (4624, 4768) OR EventID IN (4624, 4768))
+| eval event_id=tonumber(coalesce(EventCode, EventID)), machine=lower(mvindex(split(host, "."), 0))
+| where (machine="dc01" AND event_id=4768) OR (machine="ws01" AND event_id=4624)
+| rex field=_raw "<Data Name=['\"]TargetUserName['\"]>(?<xml_account>[^<]+)</Data>"
+| rex field=_raw "<Data Name=['\"]LogonType['\"]>(?<xml_logon_type>[0-9]+)</Data>"
+| rex field=_raw "<Data Name=['\"]Status['\"]>(?<xml_result>[^<]+)</Data>"
+| rex field=_raw "<Data Name=['\"]IpAddress['\"]>(?<xml_client>[^<]+)</Data>"
+| rex field=_raw "(?m)^[ \t]*New Logon:[ \t]*\r?\n[ \t]*Security ID:[^\r\n]*\r?\n[ \t]*Account Name:[ \t]*(?<text_target_account>[^\r\n]+)"
+| rex field=_raw "(?m)^[ \t]*Logon Type:[ \t]*(?<text_logon_type>[0-9]+)[ \t]*\r?$"
+| rex field=_raw "(?m)^[ \t]*Result Code:[ \t]*(?<text_result>[^ \t\r\n]+)"
+| eval account=trim(if(event_id=4624, coalesce(TargetUserName, xml_account, text_target_account), coalesce(TargetUserName, xml_account, Account_Name))),
+       logon_type=tonumber(coalesce(LogonType, xml_logon_type, Logon_Type, text_logon_type)),
+       result_code=lower(trim(coalesce(Status, xml_result, Result_Code, text_result))),
+       client_ip_on_dc=if(event_id=4768, replace(lower(trim(coalesce(IpAddress, xml_client, Client_Address))), "^::ffff:(?=[0-9]+[.])", ""), null())
+| where (event_id=4624 AND logon_type=2) OR (event_id=4768 AND match(result_code, "^(0x0+|0)$"))
+| eval observation=if(event_id=4624, "SESJA INTERAKTYWNA NA WS01", "WYDANO TGT NA DC01")
+| table _time machine event_id account observation logon_type result_code client_ip_on_dc
+| sort 0 +_time
